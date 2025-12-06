@@ -2,29 +2,113 @@
 
 import { useEffect, useState } from "react";
 
+type Status = "loading" | "done" | "error";
+
 export default function Home() {
-  const [idea, setIdea] = useState<string>("...loading");
+  const [idea, setIdea] = useState<string>("");
+  const [status, setStatus] = useState<Status>("loading");
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchIdea = async () => {
+    setStatus("loading");
+    setError(null);
+
+    try {
+      // از روت FastAPI که متن ساده برمی‌گردونه
+      const res = await fetch("/");
+
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(text || "Request failed");
+      }
+
+      setIdea(text.trim());
+      setStatus("done");
+    } catch (err: any) {
+      setError("Error: " + (err?.message || "Something went wrong"));
+      setStatus("error");
+    }
+  };
 
   useEffect(() => {
-    fetch("/api")
-      .then(async (res) => {
-        const text = await res.text();
-        if (!res.ok) {
-          throw new Error(text);
-        }
-        return text;
-      })
-      .then(setIdea)
-      .catch((err) => setIdea("Error: " + err.message));
+    fetchIdea();
   }, []);
 
   return (
-    <main className="p-8 font-sans">
-      <h1 className="text-3xl font-bold mb-4">Business Idea Generator</h1>
-      <div className="w-full max-w-2xl p-6 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm">
-        <p className="text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
-          {idea}
-        </p>
+    <main
+      className="
+        min-h-screen
+        bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950
+        text-slate-100
+        flex items-center justify-center
+        px-4
+      "
+    >
+      <div className="w-full max-w-4xl">
+        {/* Header */}
+        <header className="text-center mb-10">
+          <h1
+            className="
+              text-4xl md:text-5xl font-extrabold tracking-tight
+              text-blue-400
+              drop-shadow-[0_0_25px_rgba(37,99,235,0.45)]
+            "
+          >
+            Business Idea Generator
+          </h1>
+          <p className="mt-4 text-slate-300">
+            AI-powered innovation at your fingertips
+          </p>
+        </header>
+
+        {/* Card */}
+        <section
+          className="
+            bg-slate-900/80
+            border border-slate-700
+            rounded-3xl
+            shadow-2xl
+            px-6 sm:px-10 py-8 sm:py-10
+            flex items-center justify-center
+            min-h-[220px]
+          "
+        >
+          {status === "loading" && (
+            <p className="text-slate-400 animate-pulse">
+              Generating your business idea...
+            </p>
+          )}
+
+          {status === "done" && (
+            <p className="text-slate-100 whitespace-pre-wrap leading-relaxed">
+              {idea}
+            </p>
+          )}
+
+          {status === "error" && (
+            <p className="text-red-400 whitespace-pre-wrap">
+              {error}
+            </p>
+          )}
+        </section>
+
+        {/* Actions */}
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={fetchIdea}
+            className="
+              inline-flex items-center gap-2
+              rounded-full
+              bg-blue-500 hover:bg-blue-600 active:bg-blue-700
+              px-5 py-2
+              text-sm font-medium
+              shadow-lg shadow-blue-500/30
+              transition-colors
+            "
+          >
+            Generate another idea
+          </button>
+        </div>
       </div>
     </main>
   );
