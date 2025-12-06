@@ -29,7 +29,7 @@ def idea():
 
     # Read the model from env so you can change it without touching code.
     # Example: OPENAI_MODEL=gpt-5.1
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    model = os.getenv("OPENAI_MODEL", "gpt-5.1")
 
     client = OpenAI(api_key=api_key)
 
