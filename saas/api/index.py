@@ -1,10 +1,8 @@
 import os
 
 from fastapi import FastAPI, HTTPException  # type: ignore
-from fastapi.responses import (
-    PlainTextResponse,
-    StreamingResponse,
-)  # type: ignore
+from fastapi.responses import PlainTextResponse, StreamingResponse  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # NEW
 from openai import OpenAI  # type: ignore
 
 # ----------------- .env load -----------------
@@ -20,6 +18,19 @@ except Exception:
 
 app = FastAPI()
 
+# ------------- CORS برای localhost:3000 -------------
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # =============== OpenAI backend (non-stream) ===============
 
@@ -57,7 +68,6 @@ def stream_with_openai(prompt: str):
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY is not set")
 
-    # اینجا مدل استریم رو هم می‌تونی از env کنترل کنی
     stream_model = os.getenv("OPENAI_STREAM_MODEL", "gpt-5-nano")
 
     client = OpenAI(api_key=api_key)
@@ -71,7 +81,6 @@ def stream_with_openai(prompt: str):
 
     def event_stream():
         for chunk in stream:
-            # مثل کد قدیمی‌ات:
             text = chunk.choices[0].delta.content
             if text:
                 lines = text.split("\n")
@@ -99,7 +108,6 @@ def generate_with_ollama(prompt: str) -> str:
         messages=[{"role": "user", "content": prompt}],
     )
 
-    # پاسخ معمولاً res["message"]["content"] است
     try:
         return res["message"]["content"]
     except Exception:
@@ -124,7 +132,6 @@ def stream_with_ollama(prompt: str):
 
     def event_stream():
         for chunk in stream:
-            # ساختار معمول chunk: {"message": {"role": "assistant", "content": "..."}}
             content = chunk.get("message", {}).get("content", "")
             if content:
                 lines = content.split("\n")
@@ -141,10 +148,6 @@ def stream_with_ollama(prompt: str):
 def idea() -> str:
     """
     Endpoint ساده بدون استریم (برای تست سریع و fetch معمولی).
-
-    LLM_PROVIDER در env تعیین می‌کند از کدام بک‌اند استفاده کنیم:
-      - ollama  → فقط Llama/Ollama (حالت فعلی تو)
-      - openai  → فقط OpenAI (وقتی بعداً پول دادی)
     """
 
     prompt = "Come up with a new AI startup idea for AI Agents."
@@ -157,14 +160,12 @@ def idea() -> str:
         if provider == "openai":
             return generate_with_openai(prompt)
 
-        # اگر یه چیز عجیب تو env نوشته باشی
         raise HTTPException(
             status_code=400,
             detail=f"Unknown LLM_PROVIDER: {provider}",
         )
 
     except RuntimeError as e:
-        # مثلاً وقتی OPENAI_API_KEY ست نیست
         raise HTTPException(status_code=500, detail=str(e))
     except Exception as e:
         raise HTTPException(
@@ -178,13 +179,7 @@ def idea() -> str:
 @app.get("/api")
 def stream_idea():
     """
-    Streaming endpoint (SSE) شبیه ورژن قبلی‌ات:
-
-      - اگر LLM_PROVIDER=openai  → از stream_with_openai استفاده می‌کند.
-      - اگر LLM_PROVIDER=ollama → از stream_with_ollama استفاده می‌کند.
-
-    خروجی:
-      StreamingResponse با media_type="text/event-stream"
+    Streaming endpoint (SSE)
     """
 
     prompt = "Come up with a new AI startup idea for AI Agents."

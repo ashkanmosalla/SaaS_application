@@ -2,22 +2,32 @@
 
 import { useEffect, useState } from "react";
 
-type Status = "loading" | "done" | "error";
+type Status = "idle" | "loading" | "done" | "error";
+
+// آدرس بک‌اند از .env.local
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
   const [idea, setIdea] = useState<string>("");
-  const [status, setStatus] = useState<Status>("loading");
+  const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const fetchIdea = async () => {
     setStatus("loading");
     setError(null);
+    setIdea("");
 
     try {
-      // از روت FastAPI که متن ساده برمی‌گردونه
-      const res = await fetch("/");
+      const res = await fetch(`${BACKEND_URL}/`, {
+        method: "GET",
+        headers: {
+          Accept: "text/plain",
+        },
+      });
 
       const text = await res.text();
+
       if (!res.ok) {
         throw new Error(text || "Request failed");
       }
