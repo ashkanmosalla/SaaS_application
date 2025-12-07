@@ -1,40 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Business Idea Generator (FastAPI + Next.js + Ollama/OpenAI)
 
-## Getting Started
+An AI-powered **business idea generator** with:
 
-First, run the development server:
+- **Backend:** FastAPI (`api/index.py`)
+- **Frontend:** Next.js (pages router, `pages/index.tsx`)
+- **LLM providers:**  
+  - Local **Ollama** (e.g. `llama3.1:8b`)  
+  - **OpenAI API** (optional – for later when billing is active)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## Project Structure (inside `saas/`)
+
+```text
+saas/
+  api/
+    index.py      # FastAPI backend + Ollama/OpenAI logic
+    .env          # Backend env vars (LLM_PROVIDER, OLLAMA_MODEL, ...)
+  pages/
+    index.tsx     # Frontend UI
+    _app.tsx
+    _document.tsx
+  public/
+  styles/
+    globals.css
+    .env.local    # Frontend env (NEXT_PUBLIC_BACKEND_URL) – optional
+  package.json
+  requirements.txt
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## LLM Provider Configuration
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+LLM_PROVIDER=ollama         # or: openai
+OLLAMA_MODEL=llama3.1:8b    # default local model
+```
+# For later when you use OpenAI:
+# LLM_PROVIDER=openai
+# OPENAI_API_KEY=sk-...
+# OPENAI_MODEL=gpt-4.1-mini
+# OPENAI_STREAM_MODEL=gpt-5-nano
+```
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## # Backend deps (FastAPI, OpenAI, Ollama client, ...)
+pip install -r requirements.txt
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+# Frontend deps (Next.js, React, Tailwind)
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How to run (local development)
 
-## Learn More
+in two terminal:
+Run FastAPI backend
+``` uvicorn api.index:app --reload```
+http://127.0.0.1:8000 will come up
 
-To learn more about Next.js, take a look at the following resources:
+Run Next.js frontend
+in the second terminal saas/:
+``` npm run dev```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+then go to: http://localhost:3000
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+Scripts:
+```
+Backend dev server
+uvicorn api.index:app --reload
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+Frontend dev server
+npm run dev
+```
